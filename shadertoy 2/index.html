@@ -1,0 +1,233 @@
+<!--
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Merging Spheres</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script src="webgl-driver.js" type="text/javascript"></script>
+    <link href='https://fonts.googleapis.com/css?family=Josefin Slab' rel='stylesheet'>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: 'Josefin Slab';font-size: 32px;
+        }
+        canvas.gl {
+          position:fixed;
+          z-index:-1;
+          left:0;
+          top:0;
+          width:100%;
+          height:100%;
+        }
+    </style>
+    <script id="shader-fs" type="x-shader/x-fragment">
+      // -----------------------------------------------------------------------
+      // BEGIN - Common prelude
+      // -----------------------------------------------------------------------
+      precision mediump float;
+
+      uniform vec2 iResolution;
+      uniform float iTime;
+      uniform sampler2D iChannel0;
+
+      varying highp vec2 vTextureCoord;
+
+      void mainImage(out vec4 fragColor, in vec2 fragCoord);
+
+      void main(void) {
+        mainImage(gl_FragColor, vTextureCoord*iResolution);
+      }
+      // -----------------------------------------------------------------------
+      // END - Common prelude
+      // -----------------------------------------------------------------------
+
+      float sdSphere(in vec3 p, in float r)
+      {
+        return length(p) - r;
+      }
+      
+      float maxComp(in vec3 p)
+      {
+        return max(p.x,max(p.y, p.z));
+      }
+      
+      float sdBox(vec3 p, vec3 b)
+      {
+        vec3  di = abs(p) - b;
+        float mc = maxComp(di);
+        return min(mc, length(max(di, 0.0)));
+      }
+      
+      void rot(inout vec2 p, float a)
+      {
+        float c = cos(a);
+        float s = sin(a);
+        p = vec2(c * p.x + s * p.y, -s * p.x + c * p.y);
+      }
+      
+      // soft min function
+      float smin(float a, float b, float k)
+      {
+        float res = exp( -k * a ) + exp( -k * b );
+        return -log( res ) / k;
+      }
+      
+      float distanceEstimator(in vec3 p)
+      {
+        float d = sdSphere(p, 1.0);
+          
+        for (float x = 0.0; x < 6.0; x++)
+        {
+          vec3 off = vec3(0.0, 0.0, 0.0 +3.0 * sin(0.3 * (iTime + x)));
+          rot(off.xz, x);
+          float sphere = sdSphere(p - off, 0.75);
+          d = smin(d, sphere, 10.0);
+        }
+          
+        float box = sdBox(p - vec3(0.0,-1.0,0.0), vec3(2.0, 0.1, 2.0));
+        
+        return min(box, d);
+      }
+      
+      #define TOLERANCE       0.001
+      #define MAX_RAY_LENGTH  32.0
+      #define MAX_RAY_MARCHES 60
+      
+      float rayMarch(in vec3 ro, in vec3 rd)
+      {
+        float t = 0.0;
+        for (int i = 0; i < MAX_RAY_MARCHES; i++)
+        {
+          float distance = distanceEstimator(ro + rd*t);
+          if (distance < TOLERANCE || t > MAX_RAY_LENGTH) break;
+          t += distance;
+        }
+        return t;
+      }
+      
+      // Calculate vector normal to pos
+      vec3 normal(in vec3 pos)
+      {
+        vec3 eps = vec3(.001,0.0,0.0);
+        vec3 nor;
+        nor.x = distanceEstimator(pos+eps.xyy) - distanceEstimator(pos-eps.xyy);
+        nor.y = distanceEstimator(pos+eps.yxy) - distanceEstimator(pos-eps.yxy);
+        nor.z = distanceEstimator(pos+eps.yyx) - distanceEstimator(pos-eps.yyx);
+        return normalize(nor);
+      }
+      
+      // Specular lighting
+      float specular(in vec3 nor, in vec3 ld, in vec3 rd)
+      {
+        return pow(max(dot(reflect(ld, nor), rd), 0.), 75.);
+      }
+      
+      // Diffuse lighting
+      float diffuse(in vec3 nor, in vec3 ld)
+      {
+        return max(dot(nor, ld),0.0);
+      }
+      
+      float softShadow(in vec3 pos, in vec3 ld, float mint, float k)
+      {
+        float res = 1.0;
+        float t = mint;
+        for (int i=0; i<32; i++)
+        {
+          float distance = distanceEstimator(pos + ld*t);
+          res = min(res, k*distance/t);
+          t += max(distance, mint*0.2);
+        }
+        return clamp(res,0.25,1.0);
+      }
+      
+      vec3 render(in vec3 ro, in vec3 rd)
+      {
+        // position of light source
+        vec3 lightPos = -2.0*vec3(1.5, 3.0, -1.0);
+        // background color
+        vec3 skyCol = mix(vec3(0.8, 0.8, 1.0)*0.3, vec3(0.8, 0.8, 1.0)*0.6, 0.25 + 0.75*rd.y);
+        vec3 color  = vec3(0.5, 0.8, 1.0);
+      
+        float t = rayMarch(ro,rd);
+      
+        if (t < MAX_RAY_LENGTH)
+        {
+          // Ray intersected object
+          vec3 pos = ro + t * rd;
+          vec3 ld = normalize(pos - lightPos);
+          
+          vec3 nor = normal(pos);
+          
+          // diffuse lighting
+          float d = diffuse(nor, ld);
+          // specular lighting
+          float s = specular(nor, ld, rd);
+          
+          float sh = softShadow(pos, ld, 0.01, 16.0);
+          
+          return (color * d + s) * sh;
+        }
+        else
+        {
+          // Ray intersected sky
+          return skyCol;
+        }
+      }
+      
+      void mainImage( out vec4 fragColor, in vec2 fragCoord )
+      {
+        vec2 p = fragCoord/iResolution.xy - vec2(0.5);
+        p.x *= iResolution.x/iResolution.y;
+          
+        // camera
+        vec3 ro = 3.0*vec3(2.0, 1.0, 0.2);
+        rot(ro.xz, iTime*0.2);
+        vec3 ww = normalize(vec3(0.0, 0.0, 0.0) - ro);
+        vec3 uu = normalize(cross( vec3(0.0,1.0,0.0), ww ));
+        vec3 vv = normalize(cross(ww,uu));
+        // ray direction
+        vec3 rd = normalize( p.x*uu + p.y*vv + 2.5*ww );
+      
+        vec3 col = render(ro, rd);
+        
+        fragColor = vec4(col, 1.0);
+      }
+    </script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+      attribute highp vec3 aVertexPosition;
+      attribute highp vec3 aVertexNormal;
+      attribute highp vec2 aTextureCoord;
+
+      varying highp vec2 vTextureCoord;
+      varying highp vec3 vNormal;
+
+      void main(void) {
+        gl_Position   = vec4(aVertexPosition, 1.0);
+        vNormal = aVertexNormal;
+        vTextureCoord = aTextureCoord;
+      }
+    </script>
+  </head>
+
+  <body onload="start()">
+    <canvas id="glcanvas" class="gl">
+      Your browser doesn't appear to support the HTML5 <code>&lt;canvas&gt;</code> element.
+    </canvas>
+  </body>
+</html>
