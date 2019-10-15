@@ -305,7 +305,7 @@ vec3 getColor(vec3 ro, vec3 rd)
             float shad = shadow(p, sunDir, 4.0, 0.25); // Look into this
             float dl = max(0.0, dot(normal, sunDir));
             float grad = mix(0.2, 1.0, shad * dl);   
-            vec3 col = vec3(grad * surfaceColor +  shad * refFactor * refSkyColor) * pow(heightRatio, 3.0);
+            vec3 col = vec3(grad * surfaceColor +  refFactor * refSkyColor) * pow(heightRatio, 3.0);
             
             col = mix(skyCol, col, fogFactor);
             
