@@ -1,4 +1,9 @@
 # shaders
+
+![Licence](https://img.shields.io/github/license/essenbee/z80emu)
+![Twitch](https://img.shields.io/twitch/status/codebasealpha)
+![Twitter](https://img.shields.io/twitter/follow/codebasealpha?label=Follow&style=social)
+
 On-stream GLSL code created to introduce shaders.
 
 The .klproj files are Kodelife project files, so you will need to download the IDE from here: https://hexler.net. Its a fantastic IDE for developing and experimenting with shaders.
