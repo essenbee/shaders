@@ -25,6 +25,7 @@ The videos of the live-stream Shader episodes are archived on YouTube [here](htt
 - **codebasealpha7.klproj**: sun, sea and sky (experiental shader where we work on waves and clouds)
 - **codebasealpha8.klproj**: clouds, clouds and clouds!
 - **codebasealpha9.klproj**: version 2 of the mountain terrain shader - with lakes and clouds added, looks great I think (see Episode 69)
+- **codebasealpha10.klproj**: creating a shader for use on-stream; beginning with making fire and smoke, we build a rocket-powered Alf emote that flies up the screen (see Episode 73)
 - **TerrainShaderToy.glsl**: version 1 of our terrain shader, built for use in ShaderToy.com
 - **TerrainCloudsWaterShaderToy.glsl**: version 2 of our terrain shader, built for use in ShaderToy.com. This version has lakes and clouds.
 
