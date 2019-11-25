@@ -26,8 +26,11 @@ The videos of the live-stream Shader episodes are archived on YouTube [here](htt
 - **codebasealpha8.klproj**: clouds, clouds and clouds!
 - **codebasealpha9.klproj**: version 2 of the mountain terrain shader - with lakes and clouds added, looks great I think (see Episode 69)
 - **codebasealpha10.klproj**: creating a shader for use on-stream; beginning with making fire and smoke, we build a rocket-powered Alf emote that flies up the screen (see Episode 73)
+- **codebasealpha11.klproj**: text-based shader project (see Episode 75)
 - **TerrainShaderToy.glsl**: version 1 of our terrain shader, built for use in ShaderToy.com
 - **TerrainCloudsWaterShaderToy.glsl**: version 2 of our terrain shader, built for use in ShaderToy.com. This version has lakes and clouds.
 
 Most of the shaders above are also to be found on ShaderToy, under my username, which is of course, `codebasealpha`.
+
+During Episode 75, I set up a static Github.io website to host some of the shaders developed for my stream. This repository can be found here: https://github.com/essenbee/essenbee.github.io
 
