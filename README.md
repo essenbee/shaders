@@ -29,6 +29,7 @@ The videos of the live-stream Shader episodes are archived on YouTube [here](htt
 - **codebasealpha11.klproj**: text-based shader project (see Episode 75)
 - **TerrainShaderToy.glsl**: version 1 of our terrain shader, built for use in ShaderToy.com
 - **TerrainCloudsWaterShaderToy.glsl**: version 2 of our terrain shader, built for use in ShaderToy.com. This version has lakes and clouds.
+- **codebasealpha12.klproj**: a truly electrifying 2D shader! (see Episode 80)
 
 Most of the shaders above are also to be found on ShaderToy, under my username, which is of course, `codebasealpha`.
 
